@@ -1,0 +1,96 @@
+#include "FastLED.h"
+
+#define NUM_LEDS 11
+#define PIN 11
+int ButPin = 10;
+
+CRGB leds[NUM_LEDS];
+
+int flag = 0;                  // флаг состояния
+int regim = 0;                 // режимы
+byte bright = 50; // яркость LED светодиодов
+byte baza = 0;     // изменение оттенка LED
+
+void setup()
+{
+  FastLED.addLeds <WS2812, PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(bright);   
+}  
+
+void loop()
+{
+  if(digitalRead(ButPin) == HIGH && flag == 0)      
+    {                                              
+      regim ++;
+      flag = 1;
+      
+      if(regim > 4)                     // Если номер режима превышает требуемого
+        {                               // то отсчет начинается с нуля
+          regim = 0;
+        }
+    }
+  
+  if(digitalRead(ButPin) == LOW && flag == 1)
+    {
+      flag = 0;
+    }  
+
+// ======= Вполняем задачу при выборе режима =======
+// РЕЖИМ 0: OFF
+  if(regim == 0)
+    {
+      for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i].nscale8(250);
+      }
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CHSV(baza++, 255, 255);
+      FastLED.setBrightness(bright);
+      FastLED.show();
+      delay(20);
+    }      
+    }
+    
+// РЕЖИМ 1: R
+  if(regim == 1)
+    {
+      fadeToBlackBy(leds, NUM_LEDS, 2);
+      int pos = beatsin16(13, 0, NUM_LEDS - 1);
+      leds[pos] += CHSV(baza++, 255, 192);
+      FastLED.setBrightness(bright);
+      FastLED.show();      
+    }
+
+// РЕЖИМ 2: G
+  if(regim == 2)
+    {
+      for (int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(baza+ i * 5, 255, 255);
+      }
+      baza++;
+      FastLED.setBrightness(bright);
+      FastLED.show();
+      delay(20);     
+    }
+
+// РЕЖИМ 3: B
+  if(regim == 3)
+    {
+      fadeToBlackBy(leds, NUM_LEDS, 2);
+      for (int i = 0; i < 8; i++) {
+         leds[beatsin16(i + 7, 0, NUM_LEDS - 1)] |= CHSV(baza+=16, 200, 255);
+      }
+      FastLED.setBrightness(bright);
+      FastLED.show();
+      delay(20);      
+    }
+        
+// РЕЖИМ 4: RG
+  if(regim == 4)
+    {
+      fill_rainbow( leds, NUM_LEDS, baza++, 7);
+      if (random8() < 80) { leds[ random16(NUM_LEDS) ] += CRGB::White; }
+      FastLED.setBrightness(bright);
+      FastLED.show();
+      delay(20);      
+    }
+}    
